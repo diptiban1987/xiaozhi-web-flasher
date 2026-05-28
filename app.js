@@ -64,19 +64,45 @@ const BOARD_PINOUTS = {
         display: 'SSD1306 OLED 128x64 (I2C)',
         flash: '16MB QIO 80MHz',
         pins: [
-            { func: 'OLED SDA', gpio: 'GPIO 21', notes: 'I2C data' },
-            { func: 'OLED SCL', gpio: 'GPIO 18', notes: 'I2C clock' },
-            { func: 'MIC WS', gpio: 'GPIO 4', notes: 'I2S word select' },
-            { func: 'MIC SCK', gpio: 'GPIO 5', notes: 'I2S bit clock' },
-            { func: 'MIC DIN', gpio: 'GPIO 6', notes: 'I2S data in' },
-            { func: 'SPK DOUT', gpio: 'GPIO 7', notes: 'I2S data out' },
-            { func: 'SPK BCLK', gpio: 'GPIO 15', notes: 'I2S bit clock' },
-            { func: 'SPK LRCK', gpio: 'GPIO 16', notes: 'I2S left/right clock' },
+            { func: 'OLED SDA', gpio: 'GPIO 8', notes: 'I2C data' },
+            { func: 'OLED SCL', gpio: 'GPIO 9', notes: 'I2C clock' },
+            { func: 'MIC SCK', gpio: 'GPIO 14', notes: 'I2S bit clock' },
+            { func: 'MIC WS', gpio: 'GPIO 15', notes: 'I2S word select' },
+            { func: 'MIC DIN', gpio: 'GPIO 16', notes: 'I2S data in' },
+            { func: 'SPK BCLK', gpio: 'GPIO 17', notes: 'I2S bit clock' },
+            { func: 'SPK LRCK', gpio: 'GPIO 18', notes: 'I2S left/right clock' },
+            { func: 'SPK DOUT', gpio: 'GPIO 21', notes: 'I2S data out' },
             { func: 'BOOT Button', gpio: 'GPIO 0', notes: 'Hold for flash mode' },
             { func: 'Status LED', gpio: 'GPIO 2', notes: 'Active high (on = powered)' },
         ]
     }
 };
+
+// Load board_pins.json at startup to override hardcoded pinouts
+(async function loadBoardPins() {
+    try {
+        const resp = await fetch('./board_pins.json');
+        if (resp.ok) {
+            const remote = await resp.json();
+            let merged = 0;
+            for (const [id, data] of Object.entries(remote)) {
+                if (BOARD_PINOUTS[id]) {
+                    Object.assign(BOARD_PINOUTS[id], data);
+                    merged++;
+                } else {
+                    BOARD_PINOUTS[id] = data;
+                    merged++;
+                }
+            }
+            if (merged > 0) {
+                console.log(`[pins] Loaded ${merged} board(s) from board_pins.json`);
+                renderPinout(boardSelect.value);
+            }
+        }
+    } catch (e) {
+        console.log('[pins] No board_pins.json found, using defaults');
+    }
+})();
 
 function generatePinoutMarkdown(boardId) {
     const data = BOARD_PINOUTS[boardId];
