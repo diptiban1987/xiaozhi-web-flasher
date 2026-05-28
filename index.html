@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nayak AI | Web Flasher</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <canvas id="particles-canvas"></canvas>
+
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-n"></i>
+                </div>
+                <div>
+                    <h1>Nayak <span class="gradient-text">AI</span></h1>
+                    <p class="logo-sub">Web Flasher</p>
+                </div>
+            </div>
+            <p class="tagline">Flash your ESP32 with Nayak AI voice assistant — <span class="gradient-text">right from the browser.</span></p>
+            <div class="tips-bar">
+                <i class="fa-solid fa-circle-info"></i>
+                <span>Requires <strong>Chrome</strong> or <strong>Edge</strong> on desktop. Connect your ESP32 via USB first.</span>
+            </div>
+        </header>
+
+        <div class="flasher-card glass-panel">
+
+            <!-- Step 1: Select Board -->
+            <div class="step fade-in">
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <h2>Select Board</h2>
+                </div>
+                <div class="input-group">
+                    <label for="board-select"><i class="fa-solid fa-microchip"></i> Target Hardware</label>
+                    <div class="select-wrap">
+                        <select id="board-select">
+                            <option value="bread-compact-esp32">Standard ESP32 (WROOM-32D)</option>
+                            <option value="esp32s3-korvo2-v3">ESP32-S3 Korvo-2 V3</option>
+                            <option value="nayak-s3-oled">Nayak S3 OLED (DevKitC-1, SSD1306)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="pinout-panel" class="pinout-panel" style="display: none;">
+                    <div class="pinout-header">
+                        <i class="fa-solid fa-diagram-project"></i>
+                        <span>Pinout Reference</span>
+                        <button id="download-pinout-btn" class="btn-pinout-download" title="Download as markdown">
+                            <i class="fa-solid fa-download"></i> Download
+                        </button>
+                    </div>
+                    <div class="pinout-summary">
+                        <div class="pinout-info"><span>Board:</span> <strong id="pinout-board-name"></strong></div>
+                        <div class="pinout-info"><span>Target:</span> <strong id="pinout-target"></strong></div>
+                        <div class="pinout-info"><span>Display:</span> <strong id="pinout-display"></strong></div>
+                        <div class="pinout-info"><span>Flash:</span> <strong id="pinout-flash"></strong></div>
+                    </div>
+                    <div class="pinout-table-wrapper">
+                        <table class="pinout-table">
+                            <thead>
+                                <tr><th>Function</th><th>GPIO</th><th>Notes</th></tr>
+                            </thead>
+                            <tbody id="pinout-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Connect -->
+            <div class="step fade-in">
+                <div class="step-header">
+                    <div class="step-number">2</div>
+                    <h2>Connect Device</h2>
+                </div>
+                <p class="step-desc">Plug in your ESP32 via USB, then click <strong>Connect</strong> and select the COM port.</p>
+                <div class="actions">
+                    <button id="connect-btn" class="btn btn-primary btn-glow">
+                        <i class="fa-brands fa-usb"></i> Connect
+                    </button>
+                    <button id="disconnect-btn" class="btn btn-danger" style="display: none;">
+                        <i class="fa-solid fa-plug-circle-xmark"></i> Disconnect
+                    </button>
+                </div>
+                <div id="connection-status" class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Disconnected</span>
+                </div>
+            </div>
+
+            <!-- Step 3: Flash -->
+            <div class="step fade-in">
+                <div class="step-header">
+                    <div class="step-number">3</div>
+                    <h2>Flash Firmware</h2>
+                </div>
+                <p class="step-desc">Writes the Nayak AI firmware to the device. Takes about 1–2 minutes. <strong>Do not unplug</strong> during flashing.</p>
+
+                <div class="flash-actions">
+                    <button id="flash-btn" class="btn btn-success btn-glow" disabled>
+                        <i class="fa-solid fa-bolt"></i> Flash Device
+                    </button>
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress-bar-bg">
+                        <div id="progress-bar" class="progress-bar-fill"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span id="progress-percentage">0%</span>
+                        <span id="progress-status">Waiting...</span>
+                    </div>
+                </div>
+
+                <div class="terminal-wrapper">
+                    <div class="terminal-header">
+                        <span><i class="fa-solid fa-terminal"></i> Console</span>
+                        <button id="clear-console" title="Clear"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                    <div id="terminal" class="terminal"></div>
+                </div>
+            </div>
+
+            <!-- Step 4: Setup -->
+            <div id="step-setup" class="step fade-in" style="display: none;">
+                <div class="step-header">
+                    <div class="step-number">4</div>
+                    <h2>Device Setup</h2>
+                </div>
+
+                <div class="setup-wizard">
+                    <div id="setup-phase-1" class="setup-phase">
+                        <div class="verification-box">
+                            <span class="vcode-label">Verification Code</span>
+                            <div id="vcode-display" class="vcode-value blink">Waiting for device boot...</div>
+                        </div>
+                        <p class="phase-hint">The code appears automatically once the device boots up.</p>
+                    </div>
+
+                    <div id="setup-phase-2" class="setup-phase" style="display: none;">
+                        <div class="phase-card">
+                            <div class="phase-icon"><i class="fa-solid fa-plug"></i></div>
+                            <div class="phase-content">
+                                <h3>Step 1: Power Cycle</h3>
+                                <p>Unplug the USB cable, then plug it back in to restart the device.</p>
+                                <button id="power-cycle-done-btn" class="btn btn-outline">
+                                    <i class="fa-solid fa-check"></i> Done, it's plugged in
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="phase-card">
+                            <div class="phase-icon"><i class="fa-solid fa-wifi"></i></div>
+                            <div class="phase-content">
+                                <h3>Step 2: Connect to Wi-Fi</h3>
+                                <p>Open your device's Wi-Fi settings and connect to the hotspot:</p>
+                                <div id="hotspot-ssid" class="ssid-badge">
+                                    <i class="fa-solid fa-signal"></i> Nayak-<span id="ssid-suffix">XXXX</span>
+                                </div>
+                                <div id="hotspot-status" class="hotspot-status">
+                                    <span class="status-dot"></span>
+                                    <span class="status-text">Waiting for connection...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="phase-card">
+                            <div class="phase-icon"><i class="fa-solid fa-globe"></i></div>
+                            <div class="phase-content">
+                                <h3>Step 3: Open Setup Portal</h3>
+                                <p id="portal-auto-msg">Once connected, the portal opens automatically.</p>
+                                <button id="open-portal-btn" class="btn btn-primary" style="display: none;">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Portal
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="setup-phase-3" class="setup-phase" style="display: none;">
+                        <div class="portal-success">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <h3>Connected to Device!</h3>
+                            <p>The setup portal should now be open. Follow the instructions to configure your home Wi-Fi.</p>
+                            <button id="reopen-portal-btn" class="btn btn-primary">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Re-open Portal
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p><i class="fa-regular fa-copyright"></i> Nayak AI — Built with <i class="fa-solid fa-heart" style="color: var(--danger-color);"></i></p>
+        </footer>
+    </div>
+
+    <!-- Hotspot Modal -->
+    <div id="hotspot-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-icon"><i class="fa-solid fa-wifi"></i></div>
+                <h2>Connect to Nayak Wi-Fi</h2>
+                <p class="modal-subtitle">Your device is ready. Connect to its hotspot to continue setup.</p>
+            </div>
+            <div class="modal-body">
+                <div class="modal-ssid">
+                    <i class="fa-solid fa-signal"></i>
+                    <span>Nayak-<span id="modal-ssid-suffix">XXXX</span></span>
+                </div>
+                <div id="modal-status" class="modal-status">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Waiting for connection...</span>
+                </div>
+                <p class="modal-hint">Go to Wi-Fi settings and select the network above.<br>No password required.</p>
+            </div>
+            <div class="modal-footer">
+                <button id="modal-close-btn" class="btn btn-outline">Close</button>
+                <button id="modal-retry-btn" class="btn btn-primary" style="display: none;">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Portal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="error-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card error-modal-card">
+            <div class="modal-header">
+                <div class="modal-icon error-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
+                <h2 id="error-title">Connection Failed</h2>
+                <p class="modal-subtitle" id="error-subtitle">Something went wrong.</p>
+            </div>
+            <div class="modal-body">
+                <div id="error-tips" class="error-tips"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="error-retry-btn" class="btn btn-primary">
+                    <i class="fa-solid fa-rotate"></i> Try Again
+                </button>
+                <button id="error-close-btn" class="btn btn-outline">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
