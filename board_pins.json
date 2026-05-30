@@ -1,0 +1,42 @@
+{
+  "nayak-s3-oled": {
+    "name": "Nayak S3 OLED (DevKitC-1)",
+    "target": "ESP32-S3",
+    "display": "SSD1306 OLED 128x64 (I2C)",
+    "flash": "16MB QIO 80MHz",
+    "pins": [
+      { "func": "OLED SDA", "gpio": "GPIO 8", "notes": "I2C data" },
+      { "func": "OLED SCL", "gpio": "GPIO 9", "notes": "I2C clock" },
+      { "func": "MIC SCK", "gpio": "GPIO 14", "notes": "I2S bit clock" },
+      { "func": "MIC WS", "gpio": "GPIO 15", "notes": "I2S word select" },
+      { "func": "MIC DIN", "gpio": "GPIO 16", "notes": "I2S data in" },
+      { "func": "SPK BCLK", "gpio": "GPIO 17", "notes": "I2S bit clock" },
+      { "func": "SPK LRCK", "gpio": "GPIO 18", "notes": "I2S left/right clock" },
+      { "func": "SPK DOUT", "gpio": "GPIO 21", "notes": "I2S data out" },
+      { "func": "BOOT Button", "gpio": "GPIO 0", "notes": "Hold for flash mode" },
+      { "func": "Status LED", "gpio": "GPIO 2", "notes": "Active high (on = powered)" }
+    ]
+  },
+  "esp32s3-korvo2-v3": {
+    "name": "ESP32-S3 Korvo-2 V3",
+    "target": "ESP32-S3",
+    "display": "LCD 480x480 (SPI) + Camera",
+    "flash": "16MB QIO 80MHz",
+    "pins": [
+      { "func": "I2S MCLK", "gpio": "GPIO 16", "notes": "Audio master clock" },
+      { "func": "I2S WS", "gpio": "GPIO 45", "notes": "I2S word select" },
+      { "func": "I2S BCLK", "gpio": "GPIO 9", "notes": "I2S bit clock" },
+      { "func": "I2S DIN", "gpio": "GPIO 10", "notes": "I2S data in (ES7210)" },
+      { "func": "I2S DOUT", "gpio": "GPIO 8", "notes": "I2S data out (ES8311)" },
+      { "func": "CODEC SDA", "gpio": "GPIO 17", "notes": "ES8311/ES7210 I2C data" },
+      { "func": "CODEC SCL", "gpio": "GPIO 18", "notes": "ES8311/ES7210 I2C clock" },
+      { "func": "AMP PA", "gpio": "GPIO 48", "notes": "Audio power amplifier enable" },
+      { "func": "BOOT Button", "gpio": "GPIO 5", "notes": "Hold for flash mode" },
+      { "func": "CAM XCLK", "gpio": "GPIO 40", "notes": "Camera master clock" },
+      { "func": "CAM PCLK", "gpio": "GPIO 11", "notes": "Camera pixel clock" },
+      { "func": "CAM VSYNC", "gpio": "GPIO 21", "notes": "Camera vertical sync" },
+      { "func": "CAM HREF", "gpio": "GPIO 38", "notes": "Camera horizontal ref" },
+      { "func": "CAM D0-D7", "gpio": "GPIO 13,47,14,3,12,42,41,39", "notes": "Camera data bus" }
+    ]
+  }
+}
