@@ -437,6 +437,21 @@ function hideHotspotModal() {
 
 getEl('modal-close-btn').addEventListener('click', hideHotspotModal);
 
+getEl('power-cycle-done-btn').addEventListener('click', async () => {
+    serialKeepReading = false;
+    if (serialReader) {
+        try { await serialReader.cancel(); } catch (e) {}
+        try { serialReader.releaseLock(); } catch (e) {}
+        serialReader = null;
+    }
+    try { await device.close(); } catch (e) {}
+    clearTimeout(bootTimer);
+    clearInterval(portalPollTimer);
+    portalPollTimer = null;
+    logToTerminal('Power cycle confirmed. Reconnecting...', 'info');
+    await startSerialMonitor();
+});
+
 async function startSerialMonitor() {
     showSetupStep();
 
@@ -472,6 +487,8 @@ async function startSerialMonitor() {
                 vcodeBox.textContent = 'No boot output detected';
                 vcodeBox.classList.remove('blink');
                 advanceToPhase2();
+                showHotspotModal();
+                startPortalPolling();
             }
         }, 20000);
 
@@ -531,6 +548,8 @@ async function startSerialMonitor() {
         logToTerminal(`[SETUP] Serial error: ${e.message}`, 'error');
         logToTerminal('[SETUP] Try a manual power cycle (unplug/replug USB).', 'info');
         advanceToPhase2();
+        showHotspotModal();
+        startPortalPolling();
     }
 }
 
@@ -569,6 +588,7 @@ function startPortalPolling() {
     };
 
     updateStatus('Connect to Nayak hotspot in your Wi-Fi settings...', false);
+    getEl('modal-retry-btn').style.display = 'inline-flex';
 
     portalPollTimer = setInterval(async () => {
         pollCount++;
@@ -581,12 +601,18 @@ function startPortalPolling() {
             clearInterval(portalPollTimer);
             portalPollTimer = null;
             getEl('open-portal-btn').style.display = 'inline-flex';
-            getEl('modal-retry-btn').style.display = 'inline-flex';
             openPortalPage();
         } catch (e) {
-            if (pollCount % 10 === 0) {
-                const msg = `Still waiting... (connect to Nayak-${getEl('ssid-suffix').textContent})`;
-                updateStatus(msg, false);
+            const ssid = getEl('ssid-suffix').textContent;
+            if (pollCount === 10) {
+                updateStatus(`Make sure your device is powered on and Nayak-${ssid} appears in Wi-Fi settings`, false);
+            } else if (pollCount === 20) {
+                updateStatus(`Try unplugging USB and reconnecting. Then click "Done, it's plugged in" above.`, false);
+            } else if (pollCount % 30 === 0) {
+                updateStatus(`Still not seeing Nayak-${ssid}? Try a different USB cable or port.`, false);
+            } else if (pollCount % 10 === 0) {
+                updateStatus(`Still waiting... (connect to Nayak-${ssid})`, false);
+                logToTerminal(`[SETUP] Still waiting for hotspot connection. Poll attempt ${pollCount}...`, 'info');
             }
         }
     }, 2000);
