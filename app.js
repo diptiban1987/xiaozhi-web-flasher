@@ -307,7 +307,7 @@ flashBtn.addEventListener('click', async () => {
 
         const bootloaderOffset = 0x0;
         const flashSize = '16MB';
-        const flashMode = 'qio';
+        const flashMode = 'dio';
         const flashFreq = '80m';
         const appAddr = 0x20000;
         const assetsAddr = 0x800000;
